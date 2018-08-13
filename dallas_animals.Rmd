@@ -1,0 +1,115 @@
+---
+title: "Dallas Animal Shelter"
+subtitle: "What happens to Straying dogs"
+author: "Philemon Aidoo"
+date: "July 31, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Libraries
+```{r}
+library(tidyverse)
+library(lubridate)
+library(ggthemes)
+library(treemapify)
+library(readxl)
+```
+
+
+## Read Data
+```{r}
+animals <- read_excel(path = "~/GitHub/tidytuesday/data/week18_dallas_animals.xlsx", sheet = "simple")
+```
+
+## Overview of Data
+```{r}
+glimpse(animals)
+```
+
+## format outcome_date variable as Date
+```{r}
+animals$outcome_date <- as.Date(as.numeric(animals$outcome_date), origin = "1899-12-30")
+```
+
+## Take a glimpse of Data again
+```{r}
+glimpse(animals)
+```
+
+## Prepare data for visualization
+```{r}
+animals_new <- animals %>%
+  select(animal_type, animal_breed, animal_origin, intake_type, intake_date, outcome_type, outcome_date, month, year) %>%
+  mutate(intake_date = ymd(intake_date), 
+         outcome_date = ymd(outcome_date),
+         elapsed_days = outcome_date - intake_date)
+```
+
+## Overview of animal_new data
+```{r}
+animals_new$outcome_type <- as.factor(animals_new$outcome_type)
+animals_new$intake_type <- as.factor(animals_new$intake_type)
+glimpse(animals_new)
+```
+
+## Plot One
+```{r}
+animals_new %>%
+  filter(intake_type == "STRAY", animal_type == "DOG") %>%
+  select(animal_breed) %>%
+  group_by(animal_breed) %>%
+  count() %>%
+  arrange(desc(n)) %>%
+  ungroup() %>%
+  top_n(10, n) %>%
+  ggplot(aes(x = reorder(animal_breed, n), y = n, colour = animal_breed)) + geom_point(size = 3, show.legend = F) + geom_segment(aes(
+  x = reorder(animal_breed, n), 
+  xend = animal_breed,
+  y = 0,
+  yend = n
+), show.legend = F) + coord_flip() + theme_fivethirtyeight() + labs(
+    title = "Which breed of dogs are found Straying most?",
+    caption = "Plot by: Philemon Aidoo \n Blossom Academy, Fellow") + theme(
+      plot.title = element_text(size = 12, face = "bold", vjust = 1, color = "cadetblue"),
+      axis.line = element_line(color = "black"),
+      plot.background = element_rect(fill = "white"),
+      panel.background = element_rect(fill = "white"),
+      panel.grid.major = element_blank()
+    )
+```
+
+
+## Plot Two
+```{r}
+animals_new %>%
+  mutate(outcome_type = fct_recode(outcome_type,
+                                   "Returned to Owner" = "RETURNED TO OWNER",
+                                   "Euthanized" = "EUTHANIZED",
+                                   "Adopted" = "ADOPTION",
+                                   "Transferred" = "TRANSFER",
+                                   "Dead" = "DEAD ON ARRIVAL",
+                                   "Other" = "FOSTER",
+                                   "Other" = "OTHER",
+                                   "Other" = "MISSING",
+                                   "Dead" = "DIED",
+                                   "Other" = "FOUND REPORT",
+                                   "Other" = "WILDLIFE")) %>%
+  filter(intake_type == "STRAY", animal_type == "DOG") %>%
+  select(outcome_type) %>% 
+  group_by(outcome_type) %>%
+  count() %>%
+  ungroup() %>%
+  mutate(Proportion = n / 10000) %>%
+  ggplot(aes(area = Proportion, fill = Proportion, subgroup = outcome_type, label = outcome_type)) + geom_treemap() + geom_treemap_text(
+    colour = "white",
+    place = "center"
+  ) + labs(title = "What happens to straying dogs?", 
+           caption = "Plot by: Philemon Aidoo \n Blossom Academy, Fellow") + theme(
+             plot.title = element_text(size = 12, face = "bold", vjust = 1.5, hjust = 0.5, color = "cadetblue"),
+             legend.title = element_text(colour = "forestgreen", size = 10, face = "bold")) 
+```
+
