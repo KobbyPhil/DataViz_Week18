@@ -1,6 +1,6 @@
 ---
 title: "Dallas Animal Shelter"
-subtitle: "What happens to Straying dogs"
+subtitle: "What happens to Straying dogs?"
 author: "Philemon Aidoo"
 date: "July 31, 2018"
 output: html_document
@@ -110,6 +110,6 @@ animals_new %>%
   ) + labs(title = "What happens to straying dogs?", 
            caption = "Plot by: Philemon Aidoo \n Blossom Academy, Fellow") + theme(
              plot.title = element_text(size = 12, face = "bold", vjust = 1.5, hjust = 0.5, color = "cadetblue"),
-             legend.title = element_text(colour = "forestgreen", size = 10, face = "bold")) 
+             legend.title = element_text(colour = "forestgreen", size = 10, face = "bold"))
 ```
 
